@@ -1,16 +1,12 @@
 package com.andros230.cloudactivity;
 
 import android.app.Activity;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
 import com.amap.api.maps.AMap;
-import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.MapView;
-import com.amap.api.maps.model.CircleOptions;
-import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.services.cloud.CloudItem;
 import com.amap.api.services.cloud.CloudItemDetail;
@@ -21,7 +17,7 @@ import com.amap.api.services.core.LatLonPoint;
 
 import java.util.List;
 
-//周边搜索
+//本地搜索
 public class MainActivity extends Activity implements CloudSearch.OnCloudSearchListener, AMap.OnMarkerClickListener {
     private MapView mMapView;
     private AMap mAMap;
@@ -33,6 +29,7 @@ public class MainActivity extends Activity implements CloudSearch.OnCloudSearchL
     private CloudSearch.Query mQuery;
     private List<CloudItem> mCloudItems;
     private CloudOverlay mPoiCloudOverlay;
+    private String mLocalCityName = "上海";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,15 +76,11 @@ public class MainActivity extends Activity implements CloudSearch.OnCloudSearchL
     }
 
 
-    public void searchByBound(View view) {
-        CloudSearch.SearchBound bound = new CloudSearch.SearchBound(new LatLonPoint(
-                mCenterPoint.getLatitude(), mCenterPoint.getLongitude()), 4000);
+    public void searchByLocal(View view) {
+        CloudSearch.SearchBound bound = new CloudSearch.SearchBound(mLocalCityName);
         try {
             mQuery = new CloudSearch.Query(mTableID, mKeyWord, bound);
-            mQuery.setPageSize(10);
-            CloudSearch.Sortingrules sorting = new CloudSearch.Sortingrules("_id", false);
-            mQuery.setSortingrules(sorting);
-            mCloudSearch.searchCloudAsyn(mQuery);// 异步搜索
+            mCloudSearch.searchCloudAsyn(mQuery);
         } catch (AMapException e) {
             e.printStackTrace();
         }
@@ -115,9 +108,8 @@ public class MainActivity extends Activity implements CloudSearch.OnCloudSearchL
                             Log.d(TAG, "_updatetime " + item.getUpdatetime());
                             Log.d(TAG, "_distance " + item.getDistance());
                         }
-                        if (mQuery.getBound().getShape().equals(CloudSearch.SearchBound.BOUND_SHAPE)) {// 圆形
-                            mAMap.addCircle(new CircleOptions().center(new LatLng(mCenterPoint.getLatitude(), mCenterPoint.getLongitude())).radius(5000).strokeColor(Color.RED).fillColor(Color.argb(50, 1, 1, 1)).strokeWidth(5));
-                            mAMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mCenterPoint.getLatitude(), mCenterPoint.getLongitude()), 12));
+                        if (mQuery.getBound().getShape().equals(CloudSearch.SearchBound.LOCAL_SHAPE)) {
+                            mPoiCloudOverlay.zoomToSpan();
                         }
 
                     } else {
